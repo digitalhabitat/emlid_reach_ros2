@@ -63,18 +63,19 @@ public:
 
     if (commType_ == "serial")
     {
-      serial_driver_ = std::make_shared<ReachSerialDriver>(this);
+      serial_driver_ = std::make_shared<reach_driver::ReachSerialDriver>(shared_from_this());
       while (rclcpp::ok() && serial_driver_->ok())
       {
         bool polled = serial_driver_->poll();
         if (!polled)
         {
-          RCLCPP_WARN_THROTTLE(get_logger(), 1000, "[REACH] Failed to poll device. Waiting for data...");
+          auto& clk = *this->get_clock();
+          RCLCPP_WARN_THROTTLE(this->get_logger(), clk, 1000, "[REACH] Failed to poll device. Waiting for data...");
           notPolling = true;
         }
         else if (notPolling)
         {
-          RCLCPP_INFO(get_logger(), "[REACH] Polling successful. Reach is now streaming data.");
+          RCLCPP_INFO(this->get_logger(), "[REACH] Polling successful. Reach is now streaming data.");
           notPolling = false;
         }
         std::this_thread::sleep_for(std::chrono::duration<double>(sleep_time));
@@ -94,13 +95,13 @@ private:
   {
     commType_ = get_parameter("comm_type").as_string();
     polling_rate_ = get_parameter("polling_rate").as_double();
-    RCLCPP_INFO_STREAM(get_logger(), "[REACH] Communication type: " << commType_);
-    RCLCPP_INFO_STREAM(get_logger(), "[REACH] Polling rate: " << polling_rate_);
+    RCLCPP_INFO_STREAM(this->get_logger(), "[REACH] Communication type: " << commType_);
+    RCLCPP_INFO_STREAM(this->get_logger(), "[REACH] Polling rate: " << polling_rate_);
   }
 
   std::string commType_;
   double polling_rate_;
-  std::shared_ptr<ReachSerialDriver> serial_driver_;
+  std::shared_ptr<reach_driver::ReachSerialDriver> serial_driver_;
 };
 
 int main(int argc, char *argv[])

@@ -17,12 +17,34 @@ find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nmea_msgs REQUIRED)
 
+### nmea_lib ###
+
+# Declare library
+add_library(nmea_lib
+  src/nmea/conversion.cpp
+  src/nmea/nmea_parser.cpp
+  src/nmea/nmea_sentence.cpp
+)
+# Specify where the library header files exist
+target_include_directories(nmea_lib
+  PUBLIC
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+    "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
+# Declare ROS2 package dependencies
+set(nmea_lib_dependencies
+  nmea_msgs
+  rclcpp
+)
+# Link library with ROS2 package dependencies
+ament_target_dependencies(nmea_lib
+  ${nmea_lib_dependencies}
+)
+
 ### sat_nav_lib ###
 
 # Declare library
 add_library(sat_nav_lib
   src/sat_nav.cpp
-  src/nmea/conversion.cpp
 )
 # Specify where the library header files exist
 target_include_directories(sat_nav_lib
@@ -40,6 +62,9 @@ set(sat_nav_lib_dependencies
 ament_target_dependencies(sat_nav_lib
   ${sat_nav_lib_dependencies}
 )
+target_link_libraries(sat_nav_lib
+  nmea_lib
+)
 
 ### reach_driver_lib ###
 
@@ -47,14 +72,14 @@ ament_target_dependencies(sat_nav_lib
 add_library(reach_driver_lib
   src/reach_driver/reach_driver.cpp
   src/reach_driver/reach_serial_driver.cpp
-  src/nmea/nmea_parser.cpp
-  src/nmea/nmea_sentence.cpp
 )
 # Specify where the library header files exist
 target_include_directories(reach_driver_lib
   PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-    "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
+    "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
+    ${CMAKE_CURRENT_BINARY_DIR}
+)
 # Declare ROS2 package dependencies
 set(reach_driver_lib_dependencies
   nmea_msgs
@@ -66,6 +91,10 @@ set(reach_driver_lib_dependencies
 # Link library with ROS2 package dependencies
 ament_target_dependencies(reach_driver_lib
   ${reach_driver_lib_dependencies}
+)
+target_link_libraries(reach_driver_lib
+  nmea_lib
+  sat_nav_lib
 )
 
 ### reach_node ###
@@ -84,12 +113,14 @@ ament_target_dependencies(reach_node
 target_link_libraries(reach_node
   sat_nav_lib
   reach_driver_lib
+  nmea_lib
 )
 
 # Install the library and executable
 install(TARGETS
     reach_node
     sat_nav_lib
+    nmea_lib
     reach_driver_lib
     ARCHIVE DESTINATION lib
     LIBRARY DESTINATION lib

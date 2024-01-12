@@ -57,6 +57,8 @@ freely, subject to the following restrictions:
 #include <algorithm>
 #include <cctype>
 //#include <ros/console.h>
+#include "rclcpp/rclcpp.hpp"
+#include "rcutils/logging_macros.h"
 
 #include "nmea/nmea_parser.h"
 #include "nmea/conversion.h"
@@ -113,7 +115,9 @@ bool isValidParamChars(string txt)
 {
 	for (const char i : txt)
 	{
-		if (!isalnum(i) && i != '+' & i != '-' && i != '.')
+		// TODO(MTM): Not sure if this is correct
+		//if (!isalnum(i) && i != '+' & i != '-' && i != '.')
+		if (!isalnum(i) && (i != '+' && i != '-' && i != '.'))
 		{
 			return false;
 		}
@@ -159,8 +163,8 @@ void trim(string &str)
 
 // ---------- NMEA PARSER ----------
 
-NMEAParser::NMEAParser()
-	: log(false), ignoreEmptyChecksum(true)
+NMEAParser::NMEAParser(rclcpp::Logger logger)
+	: log(false), logger_(logger), ignoreEmptyChecksum(true)
 {
 }
 
@@ -173,20 +177,22 @@ void NMEAParser::logInfo(string txt)
 {
 	if (log)
 	{
-		cout << "[Info]    " << txt << endl;
+		//cout << "[Info]    " << txt << endl;
+		RCLCPP_INFO_STREAM(logger_,"[REACH]::NMEAParser " << txt);
 	}
 }
 void NMEAParser::logWarning(string txt)
 {
 	if (log)
 	{
-		cout << "[Warning] " << txt << endl;
+		//cout << "[Warning] " << txt << endl;
+		RCLCPP_WARN_STREAM(logger_,"[REACH]::NMEAParser " << txt);
 	}
 }
 void NMEAParser::logError(string txt)
 {
 	//ROS_ERROR_STREAM("[REACH]::NMEA " << txt);
-	RCLCPP_INFO_STREAM(this->get_logger(), "[REACH]::NMEA " << txt);
+	RCLCPP_ERROR_STREAM(logger_,"[REACH]::NMEAParser " << txt);
 }
 
 std::vector<NMEASentence> NMEAParser::getSentencesFromRawText(std::string text)
@@ -385,13 +391,13 @@ void NMEAParser::parseParameters(NMEASentence &nmea)
 	logInfo("Found " + to_string(nmea.parameters.size()) + " parameters.");
 }
 
-void NMEAParser::parseParameters(nmea_msgs::Sentence &sentence, NMEASentence &nmea)
+void NMEAParser::parseParameters(nmea_msgs::msg::Sentence &sentence, NMEASentence &nmea)
 {
 	sentence.sentence = nmea.text;
 	logInfo("ROS Sentence parsed.");
 }
 
-void NMEAParser::parseParameters(nmea_msgs::Gprmc &gprmc, NMEASentence &nmea)
+void NMEAParser::parseParameters(nmea_msgs::msg::Gprmc &gprmc, NMEASentence &nmea)
 {
 	// float64 utc_seconds
 	// string position_status
@@ -440,7 +446,7 @@ void NMEAParser::parseParameters(nmea_msgs::Gprmc &gprmc, NMEASentence &nmea)
 	logInfo("ROS RMC parsed.");
 }
 
-void NMEAParser::parseParameters(nmea_msgs::Gpgga &gpgga, NMEASentence &nmea)
+void NMEAParser::parseParameters(nmea_msgs::msg::Gpgga &gpgga, NMEASentence &nmea)
 {
 	// float64 utc_seconds
 	// float64 lat
@@ -493,7 +499,7 @@ void NMEAParser::parseParameters(nmea_msgs::Gpgga &gpgga, NMEASentence &nmea)
 	logInfo("ROS GGA parsed.");
 }
 
-void NMEAParser::parseParameters(nmea_msgs::Gpgsa &gpgsa, NMEASentence &nmea)
+void NMEAParser::parseParameters(nmea_msgs::msg::Gpgsa &gpgsa, NMEASentence &nmea)
 {
 	// string auto_manual_mode
 	// uint8 fix_mode
@@ -532,7 +538,7 @@ void NMEAParser::parseParameters(nmea_msgs::Gpgsa &gpgsa, NMEASentence &nmea)
 	}
 	logInfo("ROS GSA parsed.");
 }
-
+/* 
 void NMEAParser::parseParameters(nmea_msgs::Gpgsv &gpgsv, NMEASentence &nmea)
 {
 	// uint8 n_msgs
@@ -699,3 +705,4 @@ void NMEAParser::parseParameters(nmea_msgs::Gpzda &gpzda, NMEASentence &nmea)
 	}
 	logInfo("ROS ZDA parsed.");
 }
+ */

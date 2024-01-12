@@ -44,7 +44,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //#include <sensor_msgs/NavSatFix.h>
 //#include <sensor_msgs/NavSatStatus.h>
 //#include <sensor_msgs/TimeReference.h>
-//#include "sensor_msgs/msg/nav_sat_fix.h"
+#include "sensor_msgs/msg/nav_sat_fix.h"
 #include "sensor_msgs/msg/nav_sat_status.hpp"
 #include "sensor_msgs/msg/time_reference.hpp"
 
@@ -71,41 +71,33 @@ using namespace std;
 
 namespace reach_driver
 {
-    class ReachDriver : public rclppp::Node
+    class ReachDriver
     {
     public:
         //ReachDriver(ros::NodeHandle node, ros::NodeHandle private_nh);
-        ReachDriver(const rclcpp::NodeOptions &options);
+        ReachDriver(std::shared_ptr<rclcpp::Node> my_node);
         ~ReachDriver();
 
         virtual bool available();
         bool poll();
 
+        rclcpp::Logger logger_;
+
     private:
         //void setSentencePubs(ros::NodeHandle private_nh, ros::NodeHandle node);
-        void setSentencePubs();
+        void setSentencePubs(std::shared_ptr<rclcpp::Node> my_node);
         virtual string readFromDevice();
 
+        std::shared_ptr<rclcpp::Node> my_node_;
         nmea::NMEAParser parser;
         std::string frame_id;
 
-        //ros::Publisher sentence_pub;
-        //ros::Publisher gpgga_pub;
-        //ros::Publisher gpgsa_pub;
-        //ros::Publisher gpgst_pub;
-        //ros::Publisher gpgsv_pub;
-        //ros::Publisher gprmc_pub;
-        //ros::Publisher gpvtg_pub;
-        //ros::Publisher gpzda_pub;
-        //ros::Publisher fix_pub;
-        //ros::Publisher timeref_pub;
-        //ros::Publisher twist_pub;
         rclcpp::Publisher<nmea_msgs::msg::Sentence>::SharedPtr sentence_pub;
         rclcpp::Publisher<nmea_msgs::msg::Gpgga>::SharedPtr gpgga_pub;
         rclcpp::Publisher<nmea_msgs::msg::Gpgsa>::SharedPtr gpgsa_pub;
         //rclcpp::Publisher<nmea_msgs::msg::Gpgst>::SharedPtr gpgst_pub;
-        rclcpp::Publisher<nmea_msgs::msg::Gpgsv>::SharedPtr gpgsv_pub;
-        rclcpp::Publisher<nmea_msgs::msg::Gprmc>::SharedPtr gprmc_pub;
+        //rclcpp::Publisher<nmea_msgs::msg::Gpgsv>::SharedPtr gpgsv_pub;
+        //rclcpp::Publisher<nmea_msgs::msg::Gprmc>::SharedPtr gprmc_pub;
         //rclcpp::Publisher<nmea_msgs::msg::Gpvtg>::SharedPtr gpvtg_pub;
         //rclcpp::Publisher<nmea_msgs::msg::Gpzda>::SharedPtr gpzda_pub;
         rclcpp::Publisher<sensor_msgs::msg::NavSatFix>::SharedPtr fix_pub;
@@ -116,8 +108,8 @@ namespace reach_driver
         bool publish_gpgga = false;
         bool publish_gpgsa = false;
         //bool publish_gpgst = false;
-        bool publish_gpgsv = false;
-        bool publish_gprmc = false;
+        //bool publish_gpgsv = false;
+        //bool publish_gprmc = false;
         //bool publish_gpvtg = false;
         //bool publish_gpzda = false;
     };
@@ -127,7 +119,7 @@ namespace reach_driver
 
     public:
         //ReachSerialDriver(ros::NodeHandle node, ros::NodeHandle private_nh);
-        ReachSerialDriver(const rclcpp::NodeOptions &options);
+        ReachSerialDriver(std::shared_ptr<rclcpp::Node> my_node);
         ~ReachSerialDriver();
 
         void initialise();

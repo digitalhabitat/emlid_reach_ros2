@@ -42,39 +42,80 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 using namespace reach_driver;
 using namespace nmea;
 
-//ReachDriver::ReachDriver(ros::NodeHandle node,
- //                        ros::NodeHandle private_nh)
+// class ReachDriverNode
+// {
+// public:
+//     ReachDriverNode(const rclcpp::NodeOptions & options);
+//     bool available();
+//     std::string readFromDevice();
+//     bool poll();
 
- class ReachDriverNode : public rclcpp::Node
+// private:
+//     void setSentencePubs(const rclcpp::NodeOptions &options);
+
+//     // ROS 2 publishers
+//     rclcpp::Publisher<nmea_msgs::msg::Sentence>::SharedPtr sentence_pub;
+//     rclcpp::Publisher<nmea_msgs::msg::Gpgga>::SharedPtr gpgga_pub;
+//     rclcpp::Publisher<nmea_msgs::msg::Gpgsa>::SharedPtr gpgsa_pub;
+//     //rclcpp::Publisher<nmea_msgs::msg::Gpgst>::SharedPtr gpgst_pub;
+//     rclcpp::Publisher<nmea_msgs::msg::Gpgsv>::SharedPtr gpgsv_pub;
+//     rclcpp::Publisher<nmea_msgs::msg::Gprmc>::SharedPtr gprmc_pub;
+//     //rclcpp::Publisher<nmea_msgs::msg::Gpvtg>::SharedPtr gpvtg_pub;
+//     //rclcpp::Publisher<nmea_msgs::msg::Gpzda>::SharedPtr gpzda_pub;
+
+//     rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr twist_pub;
+//     rclcpp::Publisher<sensor_msgs::msg::NavSatFix>::SharedPtr fix_pub;
+//     rclcpp::Publisher<sensor_msgs::msg::TimeReference>::SharedPtr timeref_pub;
+
+//     NMEAParser parser(this->get_logger());
+//     std::string frame_id;
+
+//     bool publish_ignored = false;
+//     bool publish_gpgga = false;
+//     bool publish_gpgsa = false;
+//    // bool publish_gpgst = false;
+//    // bool publish_gpgsv = false;
+//     bool publish_gprmc = false;
+//    // bool publish_gpvtg = false;
+//    // bool publish_gpzda = false;
+// }
+
+ReachDriver::ReachDriver(std::shared_ptr<rclcpp::Node> my_node)
+: logger_(my_node->get_logger()), my_node_(my_node), parser(my_node->get_logger())
 {
-    bool parser_debug;
-    private_nh.param<bool>("parser_debug", parser_debug, false);
-    parser.log = parser_debug;
-    ROS_INFO_STREAM("[REACH] NMEA Parser debug: " << (parser_debug ? "on" : "off"));
-    private_nh.param<string>("frame_id", frame_id, "gps");
+        bool parser_debug;
+        my_node->get_parameter_or("parser_debug", parser_debug, false);
+        parser.log = parser_debug;
+        RCLCPP_INFO(my_node->get_logger(), "[REACH] NMEA Parser debug: %s", parser_debug ? "on" : "off");
 
-    setSentencePubs(private_nh, node);
+        my_node->get_parameter_or("frame_id", frame_id, std::string("gps"));
 
-    twist_pub = node.advertise<geometry_msgs::Twist>("reach/vel", 100);
-    fix_pub = node.advertise<sensor_msgs::NavSatFix>("reach/fix", 100);
-    timeref_pub = node.advertise<sensor_msgs::TimeReference>("reach/time_ref", 100);
+        setSentencePubs(my_node);
+
+        twist_pub = my_node->create_publisher<geometry_msgs::msg::Twist>("reach/vel", 100);
+        fix_pub = my_node->create_publisher<sensor_msgs::msg::NavSatFix>("reach/fix", 100);
+        timeref_pub = my_node->create_publisher<sensor_msgs::msg::TimeReference>("reach/time_ref", 100);
 }
 
 ReachDriver::~ReachDriver()
 {
 }
 
-void ReachDriver::setSentencePubs(ros::NodeHandle private_nh, ros::NodeHandle node)
+void ReachDriver::setSentencePubs(std::shared_ptr<rclcpp::Node> my_node)
 {
-    ROS_INFO_STREAM("[REACH] Publish ignored sentences: " << (publish_ignored ? "on" : "off"));
-    private_nh.param<bool>("pub_ignored", publish_ignored, true);
-    if (publish_ignored)
+    bool pub_ignored;
+    my_node->declare_parameter("pub_ignored", true);
+    my_node->get_parameter("pub_ignored", pub_ignored);
+    RCLCPP_INFO(my_node->get_logger(), "[REACH] Publish ignored sentences: %s", (pub_ignored ? "on" : "off"));
+
+    if (pub_ignored)
     {
-        sentence_pub = node.advertise<nmea_msgs::Sentence>("reach/nmea/ignored_sentence", 100);
+        sentence_pub = my_node->create_publisher<nmea_msgs::msg::Sentence>("reach/nmea/ignored_sentence", 100);
     }
 
     std::string sentences;
-    private_nh.param<std::string>("sentences", sentences, "GGA,GSA,GST,GSV,RMC,VTG,ZDA");
+    my_node->declare_parameter("sentences", "GGA,GSA,GST,GSV,RMC,VTG,ZDA");
+    my_node->get_parameter("sentences", sentences);
     istringstream f(sentences);
     string s;
     std::stringstream ss;
@@ -83,167 +124,162 @@ void ReachDriver::setSentencePubs(ros::NodeHandle private_nh, ros::NodeHandle no
         if (s == "GGA")
         {
             publish_gpgga = true;
-            gpgga_pub = node.advertise<nmea_msgs::Gpgga>("reach/nmea/gpgga", 100);
+            gpgga_pub = my_node->create_publisher<nmea_msgs::msg::Gpgga>("reach/nmea/gpgga", 100);
             ss << s << ",";
         }
         else if (s == "GSA")
         {
             publish_gpgsa = true;
-            gpgsa_pub = node.advertise<nmea_msgs::Gpgsa>("reach/nmea/gpgsa", 100);
+            gpgsa_pub = my_node->create_publisher<nmea_msgs::msg::Gpgsa>("reach/nmea/gpgsa", 100);
             ss << s << ",";
         }
-        else if (s == "GST")
-        {
-            publish_gpgst = true;
-            //gpgst_pub = node.advertise<nmea_msgs::Gpgst>("reach/nmea/gpgst", 100);
-            ss << s << ",";
-        }
-        else if (s == "GSV")
-        {
-            publish_gpgsv = true;
-            gpgsv_pub = node.advertise<nmea_msgs::Gpgsv>("reach/nmea/gpgsv", 100);
-            ss << s << ",";
-        }
-        else if (s == "RMC")
-        {
-            publish_gprmc = true;
-            gprmc_pub = node.advertise<nmea_msgs::Gprmc>("reach/nmea/gprmc", 100);
-            ss << s << ",";
-        }
-        else if (s == "VTG")
-        {
-            publish_gpvtg = true;
-            //gpvtg_pub = node.advertise<nmea_msgs::Gpvtg>("reach/nmea/gpvtg", 100);
-            ss << s << ",";
-        }
-        else if (s == "ZDA")
-        {
-            publish_gpzda = true;
-            //gpzda_pub = node.advertise<nmea_msgs::Gpzda>("reach/nmea/gpzda", 100);
-            ss << s << ",";
-        }
+        //else if (s == "GST")
+        //{
+        //    publish_gpgst = true;
+        //    gpgst_pub = this->create_publisher<nmea_msgs::msg::Gpgst>("reach/nmea/gpgst", 100);
+        //    ss << s << ",";
+        //}
+        //else if (s == "GSV")
+        //{
+        //    publish_gpgsv = true;
+        //    gpgsv_pub = this->create_publisher<nmea_msgs::msg::Gpgsv>("reach/nmea/gpgsv", 100);
+        //    ss << s << ",";
+        //}
+        //else if (s == "RMC")
+        //{
+        //    publish_gprmc = true;
+        //    gprmc_pub = this->create_publisher<nmea_msgs::msg::Gprmc>("reach/nmea/gprmc", 100);
+        //    ss << s << ",";
+        //}
+        //else if (s == "VTG")
+        //{
+        //    publish_gpvtg = true;
+        //    gpvtg_pub = this->create_publisher<nmea_msgs::msg::Gpvtg>("reach/nmea/gpvtg", 100);
+        //    ss << s << ",";
+        //}
+        //else if (s == "ZDA")
+        //{
+        //    publish_gpzda = true;
+        //    gpzda_pub = this->create_publisher<nmea_msgs::msg::Gpzda>("reach/nmea/gpzda", 100);
+        //    ss << s << ",";
+        //}
         else
         {
-            ROS_WARN_STREAM("Unknown sentence type \"" << s << "\". Ignoring.");
+            RCLCPP_WARN(my_node->get_logger(), "Unknown sentence type \"%s\". Ignoring.", s.c_str());
         }
     }
     std::string sss = ss.str();
-    ROS_INFO_STREAM("[REACH] Sentences to publish: " << (sss.empty() ? "none" : sss.substr(0, sss.size() - 1)));
+    RCLCPP_INFO(my_node->get_logger(), "[REACH] Sentences to publish: %s", (sss.empty() ? "none" : sss.substr(0, sss.size() - 1).c_str()));
 }
 
-bool ReachDriver::available() {}
+bool ReachDriver::available() {return false;}
 
-string ReachDriver::readFromDevice() {}
+string ReachDriver::readFromDevice() {return "this is a test";}
 
 bool ReachDriver::poll()
 {
     if (available())
     {
-        geometry_msgs::Twist twist;
-        sensor_msgs::NavSatFix fix;
-        sensor_msgs::NavSatStatus status;
-        sensor_msgs::TimeReference timeref;
+        geometry_msgs::msg::Twist twist;
+        sensor_msgs::msg::NavSatFix fix;
+        sensor_msgs::msg::TimeReference timeref;
         sat_nav::SatNav satNav;
-
-        ros::Time now = ros::Time::now();
+        rclcpp::Time now = my_node_->get_clock()->now();
         std::string text = readFromDevice();
         std::vector<NMEASentence> sentences = parser.getSentencesFromRawText(text);
         for (size_t i = 0; i < sentences.size(); i++)
         {
             if (!sentences[i].valid())
             {
-                ROS_INFO_STREAM("[REACH] Invalid sentence: " + sentences[i].text);
+                RCLCPP_INFO(my_node_->get_logger(), "[REACH] Invalid sentence: %s", sentences[i].text.c_str());
                 continue;
             }
             if (sentences[i].name == "GGA" && publish_gpgga)
             {
-                nmea_msgs::Gpgga gpgga;
+                nmea_msgs::msg::Gpgga gpgga;
                 gpgga.header.stamp = now;
                 gpgga.header.frame_id = frame_id;
                 parser.parseParameters(gpgga, sentences[i]);
-                gpgga_pub.publish(gpgga);
-
+                gpgga_pub->publish(gpgga);
                 satNav.addData(gpgga);
             }
             else if (sentences[i].name == "GSA" && publish_gpgsa)
             {
-                nmea_msgs::Gpgsa gpgsa;
+                nmea_msgs::msg::Gpgsa gpgsa;
                 gpgsa.header.stamp = now;
                 gpgsa.header.frame_id = frame_id;
                 parser.parseParameters(gpgsa, sentences[i]);
-                gpgsa_pub.publish(gpgsa);
+                gpgsa_pub->publish(gpgsa);
             }
-            else if (sentences[i].name == "GST" && publish_gpgst)
-            {
-                nmea_msgs::Gpgst gpgst;
-                gpgst.header.stamp = now;
-                gpgst.header.frame_id = frame_id;
-                parser.parseParameters(gpgst, sentences[i]);
-                gpgst_pub.publish(gpgst);
-                satNav.addData(gpgst);
-            }
-            else if (sentences[i].name == "GSV" && publish_gpgsv)
-            {
-                nmea_msgs::Gpgsv gpgsv;
-                gpgsv.header.stamp = now;
-                gpgsv.header.frame_id = frame_id;
-                parser.parseParameters(gpgsv, sentences[i]);
-                gpgsv_pub.publish(gpgsv);
-            }
-            else if (sentences[i].name == "RMC" && publish_gprmc)
-            {
-                nmea_msgs::Gprmc gprmc;
-                gprmc.header.stamp = now;
-                gprmc.header.frame_id = frame_id;
-                parser.parseParameters(gprmc, sentences[i]);
-                gprmc_pub.publish(gprmc);
-                satNav.addData(gprmc);
-            }
-            else if (sentences[i].name == "VTG" && publish_gpvtg)
-            {
-                nmea_msgs::Gpvtg gpvtg;
-                gpvtg.header.stamp = now;
-                gpvtg.header.frame_id = frame_id;
-                parser.parseParameters(gpvtg, sentences[i]);
-                gpvtg_pub.publish(gpvtg);
-                satNav.addData(gpvtg);
-            }
-            else if (sentences[i].name == "ZDA" && publish_gpzda)
-            {
-                nmea_msgs::Gpzda gpzda;
-                gpzda.header.stamp = now;
-                gpzda.header.frame_id = frame_id;
-                parser.parseParameters(gpzda, sentences[i]);
-                gpzda_pub.publish(gpzda);
-                satNav.addData(gpzda);
-            }
+           //else if (sentences[i].name == "GST" && publish_gpgst)
+           //{
+           //    nmea_msgs::msg::Gpgst gpgst;
+           //    gpgst.header.stamp = now;
+           //    gpgst.header.frame_id = frame_id;
+           //    parser.parseParameters(gpgst, sentences[i]);
+           //    gpgst_pub->publish(gpgst);
+           //    satNav.addData(gpgst);
+           //}
+           //else if (sentences[i].name == "GSV" && publish_gpgsv)
+           //{
+           //    nmea_msgs::msg::Gpgsv gpgsv;
+           //    gpgsv.header.stamp = now;
+           //    gpgsv.header.frame_id = frame_id;
+           //    parser.parseParameters(gpgsv, sentences[i]);
+           //    gpgsv_pub->publish(gpgsv);
+           //}
+           //else if (sentences[i].name == "RMC" && publish_gprmc)
+           //{
+           //    nmea_msgs::msg::Gprmc gprmc;
+           //    gprmc.header.stamp = now;
+           //    gprmc.header.frame_id = frame_id;
+           //    parser.parseParameters(gprmc, sentences[i]);
+           //    gprmc_pub->publish(gprmc);
+           //    satNav.addData(gprmc);
+           //}
+           //else if (sentences[i].name == "VTG" && publish_gpvtg)
+           //{
+           //    nmea_msgs::msg::Gpvtg gpvtg;
+           //    gpvtg.header.stamp = now;
+           //    gpvtg.header.frame_id = frame_id;
+           //    parser.parseParameters(gpvtg, sentences[i]);
+           //    gpvtg_pub->publish(gpvtg);
+           //    satNav.addData(gpvtg);
+           //}
+           //else if (sentences[i].name == "ZDA" && publish_gpzda)
+           //{
+           //    nmea_msgs::msg::Gpzda gpzda;
+           //    gpzda.header.stamp = now;
+           //    gpzda.header.frame_id = frame_id;
+           //    parser.parseParameters(gpzda, sentences[i]);
+           //    gpzda_pub->publish(gpzda);
+           //    satNav.addData(gpzda);
+           //}
             else if (publish_ignored)
             {
-                nmea_msgs::Sentence sentence;
+                nmea_msgs::msg::Sentence sentence;
                 sentence.header.stamp = now;
                 sentence.header.frame_id = frame_id;
                 parser.parseParameters(sentence, sentences[i]);
-                sentence_pub.publish(sentence);
+                sentence_pub->publish(sentence);
             }
         }
-
         if (satNav.setTwist(twist))
         {
-            twist_pub.publish(twist);
+            twist_pub->publish(twist);
         }
         if (satNav.setNavSatFix(fix))
         {
             fix.header.stamp = now;
             fix.header.frame_id = frame_id;
-            fix_pub.publish(fix);
+            fix_pub->publish(fix);
         }
         if (satNav.setTimeReference(timeref))
         {
             timeref.header.stamp = now;
             timeref.header.frame_id = frame_id;
-            timeref_pub.publish(timeref);
+            timeref_pub->publish(timeref);
         }
-        
         return true;
     }
     return false;

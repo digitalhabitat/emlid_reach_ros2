@@ -59,6 +59,8 @@ freely, subject to the following restrictions:
 #include <cstdint>
 #include <exception>
 
+#include "rclcpp/rclcpp.hpp"
+
 //#include <nmea_msgs/Sentence.h>
 //#include <nmea_msgs/Gpgga.h>
 //#include <nmea_msgs/Gpgsa.h>
@@ -68,18 +70,18 @@ freely, subject to the following restrictions:
 //#include <nmea_msgs/Gprmc.h>
 //#include <nmea_msgs/Gpvtg.h>
 //#include <nmea_msgs/Gpzda.h>
-#include "nmea_msgs/msg/sentence.h"
-#include "nmea_msgs/msg/gpgsv.h"
-#include "nmea_msgs/msg/gpgsa.h"
-#include "nmea_msgs/msg/gprmc.h"
-#include "nmea_msgs/msg/gpgsv_satellite.h"
-#include "nmea_msgs/msg/gpgga.h"
+#include "nmea_msgs/msg/sentence.hpp"
+#include "nmea_msgs/msg/gpgsv.hpp"
+#include "nmea_msgs/msg/gpgsa.hpp"
+#include "nmea_msgs/msg/gprmc.hpp"
+#include "nmea_msgs/msg/gpgsv_satellite.hpp"
+#include "nmea_msgs/msg/gpgga.hpp"
 
 #include <nmea/nmea_sentence.h>
 
 namespace nmea
 {
-	class NMEAParser;
+	//class NMEAParser;
 
 	class NMEAParseError : public std::exception
 	{
@@ -110,16 +112,18 @@ namespace nmea
 		static uint8_t calculateXORChecksum(std::string);
 
 	public:
-		NMEAParser();
+		NMEAParser(rclcpp::Logger logger);
 		virtual ~NMEAParser();
 
 		bool log;
+		rclcpp::Logger logger_;
 		bool ignoreEmptyChecksum;
+		
 		std::vector<NMEASentence> getSentencesFromRawText(std::string text);
 
 		void parseParameters(NMEASentence &nmea);
 		void parseParameters(nmea_msgs::msg::Sentence &sentence, NMEASentence &nmea);
-		//void parseParameters(nmea_msgs::msg::Gprmc &gprmc, NMEASentence &nmea);
+		void parseParameters(nmea_msgs::msg::Gprmc &gprmc, NMEASentence &nmea);
 		void parseParameters(nmea_msgs::msg::Gpgga &gpgga, NMEASentence &nmea);
 		void parseParameters(nmea_msgs::msg::Gpgsa &gpgsa, NMEASentence &nmea);
 		//void parseParameters(nmea_msgs::msg::Gpgsv &gpgsv, NMEASentence &nmea);

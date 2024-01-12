@@ -36,16 +36,20 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 using namespace reach_driver;
 
-ReachSerialDriver::ReachSerialDriver(const rclcpp::NodeOptions & options)
-    : ReachDriver(options), initialised(false)
+ReachSerialDriver::ReachSerialDriver(std::shared_ptr<rclcpp::Node> my_node)
+    : ReachDriver(my_node), initialised(false)
 {
-    auto private_parameters = this->get_parameters({"port", "baudrate", "timeout"});
-    port = private_parameters["port"].get_value<std::string>("/dev/ttyACM0");
-    baudrate = private_parameters["baudrate"].get_value<int>(115200);
-    timeout = private_parameters["timeout"].get_value<int>(1000);
+    // Declare parameters with default values
+    my_node->declare_parameter("port", "/dev/ttyACM0");
+    my_node->declare_parameter("baudrate", 115200);
+    my_node->declare_parameter("timeout", 1000);
+    // Get parameter values
+    port = my_node->get_parameter("port").as_string();
+    baudrate = my_node->get_parameter("baudrate").as_int();
+    timeout = my_node->get_parameter("timeout").as_int();
 
-    RCLCPP_INFO(this->get_logger(), "[REACH] Connecting to Reach...");
-    RCLCPP_INFO(this->get_logger(), "[REACH] Port: %s | Baudrate: %d | Timeout: %d", port.c_str(), baudrate, timeout);
+    RCLCPP_INFO(my_node->get_logger(), "[REACH] Connecting to Reach...");
+    RCLCPP_INFO(my_node->get_logger(), "[REACH] Port: %s | Baudrate: %d | Timeout: %d", port.c_str(), baudrate, timeout);
     initialise();
 }
 
@@ -68,7 +72,7 @@ void ReachSerialDriver::initialise()
 
     if (ser.isOpen())
     {
-        RCLCPP_WARN(this->get_logger(), "[REACH] Port \"%s\" is already open.", port.c_str());
+        RCLCPP_WARN(logger_,"[REACH] Port \"%s\" is already open.", port.c_str());
         return;
     }
     while (rclcpp::ok() && !ser.isOpen())
@@ -79,22 +83,22 @@ void ReachSerialDriver::initialise()
         }
         catch (serial::SerialException &e)
         {
-            RCLCPP_ERROR(this->get_logger(), "[REACH] Unable to open %s. Error:\n%s", port.c_str(), e.what());
+            RCLCPP_ERROR(logger_, "[REACH] Unable to open %s. Error:\n%s", port.c_str(), e.what());
             rclcpp::sleep_for(std::chrono::seconds(1));
         }
         catch (serial::IOException &e)
         {
             if (e.getErrorNumber() == 13)
             {
-                RCLCPP_WARN(this->get_logger(), "[REACH] Do not have read access for %s.", port.c_str());
+                RCLCPP_WARN(logger_, "[REACH] Do not have read access for %s.", port.c_str());
             }
             else if (e.getErrorNumber() == 2)
             {
-                RCLCPP_WARN(this->get_logger(), "[REACH] Waiting for port \"%s\" to appear. Reconnecting...", port.c_str());
+                RCLCPP_WARN(logger_, "[REACH] Waiting for port \"%s\" to appear. Reconnecting...", port.c_str());
             }
             else
             {
-                RCLCPP_WARN(this->get_logger(), "[REACH] Can't open %s.\n%s", port.c_str(), e.what());
+                RCLCPP_WARN(logger_, "[REACH] Can't open %s.\n%s", port.c_str(), e.what());
             }
             rclcpp::sleep_for(std::chrono::seconds(1));
         }
@@ -102,7 +106,7 @@ void ReachSerialDriver::initialise()
     initialised = ser.isOpen();
     if (ok())
     {
-        RCLCPP_INFO(this->get_logger(), "[REACH] Reach connected!");
+        RCLCPP_INFO(logger_, "[REACH] Reach connected!");
     }
 }
 
@@ -126,17 +130,17 @@ std::string ReachSerialDriver::readFromDevice()
     }
     catch (serial::PortNotOpenedException &e)
     {
-        RCLCPP_ERROR(this->get_logger(), "[REACH] Port \"%s\" not open. Reconnecting...", port.c_str());
+        RCLCPP_ERROR(logger_, "[REACH] Port \"%s\" not open. Reconnecting...", port.c_str());
         reconnect();
     }
     catch (serial::SerialException &e)
     {
-        RCLCPP_ERROR(this->get_logger(), "[REACH] Serial Exception. Error:\n%s.\nReconnecting...", e.what());
+        RCLCPP_ERROR(logger_, "[REACH] Serial Exception. Error:\n%s.\nReconnecting...", e.what());
         reconnect();
     }
     catch (serial::IOException &e)
     {
-        RCLCPP_ERROR(this->get_logger(), "[REACH] Unable to read from port. Error:\n%s.\nReconnecting...", e.what());
+        RCLCPP_ERROR(logger_, "[REACH] Unable to read from port. Error:\n%s.\nReconnecting...", e.what());
         reconnect();
     }
     return "";
@@ -150,7 +154,7 @@ bool ReachSerialDriver::available()
     }
     catch (serial::IOException &e)
     {
-        RCLCPP_ERROR(this->get_logger(), "[REACH] Unable to read from port. Error:\n%s.\nReconnecting...", e.what());
+        RCLCPP_ERROR(logger_, "[REACH] Unable to read from port. Error:\n%s.\nReconnecting...", e.what());
         reconnect();
     }
     return false;
