@@ -7,15 +7,15 @@ Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
 
 1. Redistributions of source code must retain the above copyright notice, this
-   list of conditions and the following disclaimer.
+  list of conditions and the following disclaimer.
 
 2. Redistributions in binary form must reproduce the above copyright notice,
-   this list of conditions and the following disclaimer in the documentation
-   and/or other materials provided with the distribution.
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
 
 3. Neither the name of the copyright holder nor the names of its
-   contributors may be used to endorse or promote products derived from
-   this software without specific prior written permission.
+  contributors may be used to endorse or promote products derived from
+  this software without specific prior written permission.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -29,56 +29,84 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <ros/ros.h>
+//#include <ros/ros.h>
+#include "rclcpp/rclcpp.hpp"
 
-#include <nmea_msgs/Sentence.h>
-#include <nmea_msgs/Gpgga.h>
-#include <nmea_msgs/Gpgsa.h>
-#include <nmea_msgs/Gpgst.h>
-#include <nmea_msgs/Gpgsv.h>
-#include <nmea_msgs/GpgsvSatellite.h>
-#include <nmea_msgs/Gprmc.h>
+//#include <nmea_msgs/Sentence.h>
+//#include <nmea_msgs/Gpgga.h>
+//#include <nmea_msgs/Gpgsa.h>
+//#include <nmea_msgs/Gpgst.h>
+//#include <nmea_msgs/Gpgsv.h>
+//#include <nmea_msgs/GpgsvSatellite.h>
+//#include <nmea_msgs/Gprmc.h>
+#include "nmea_msgs/msg/sentence.h"
+#include "nmea_msgs/msg/gpgsv.h"
+#include "nmea_msgs/msg/gpgsa.h"
+#include "nmea_msgs/msg/gprmc.h"
+#include "nmea_msgs/msg/gpgsv_satellite.h"
+#include "nmea_msgs/msg/gpgga.h"
 
 #include "nmea/nmea_parser.h"
 #include "nmea/nmea_sentence.h"
 #include "reach_driver/reach_driver.h"
 
-using namespace reach_driver;
+class ReachNode : public rclcpp::Node
+{
+public:
+  ReachNode() : Node("reach_node")
+  {
+    declare_parameters();
+    get_parameters();
+
+    double sleep_time = 1.0 / polling_rate_;
+    bool notPolling = true;
+
+    if (commType_ == "serial")
+    {
+      serial_driver_ = std::make_shared<ReachSerialDriver>(this);
+      while (rclcpp::ok() && serial_driver_->ok())
+      {
+        bool polled = serial_driver_->poll();
+        if (!polled)
+        {
+          RCLCPP_WARN_THROTTLE(get_logger(), 1000, "[REACH] Failed to poll device. Waiting for data...");
+          notPolling = true;
+        }
+        else if (notPolling)
+        {
+          RCLCPP_INFO(get_logger(), "[REACH] Polling successful. Reach is now streaming data.");
+          notPolling = false;
+        }
+        std::this_thread::sleep_for(std::chrono::duration<double>(sleep_time));
+        rclcpp::spin_some(shared_from_this());
+      }
+    }
+  }
+
+private:
+  void declare_parameters()
+  {
+    declare_parameter<std::string>("comm_type", "serial");
+    declare_parameter<double>("polling_rate", 1.0);
+  }
+
+  void get_parameters()
+  {
+    commType_ = get_parameter("comm_type").as_string();
+    polling_rate_ = get_parameter("polling_rate").as_double();
+    RCLCPP_INFO_STREAM(get_logger(), "[REACH] Communication type: " << commType_);
+    RCLCPP_INFO_STREAM(get_logger(), "[REACH] Polling rate: " << polling_rate_);
+  }
+
+  std::string commType_;
+  double polling_rate_;
+  std::shared_ptr<ReachSerialDriver> serial_driver_;
+};
 
 int main(int argc, char *argv[])
 {
-    ros::init(argc, argv, "reach_node");
-    ros::NodeHandle node;
-    ros::NodeHandle private_nh("~");
-
-    std::string commType;
-    float polling_rate;
-    private_nh.param<std::string>("comm_type", commType, "serial");
-    private_nh.param<float>("polling_rate", polling_rate, 1.0);
-    ROS_INFO_STREAM("[REACH] Communication type: " << commType);
-    ROS_INFO_STREAM("[REACH] Polling rate: " << polling_rate);
-
-    double sleep_time = 1.0 / polling_rate;
-    bool notPolling = true;
-
-    if (commType == "serial")
-    {
-        ReachSerialDriver serial_driver(node, private_nh);
-        while (ros::ok() && serial_driver.ok())
-        {
-            bool polled = serial_driver.poll();
-            if (!polled)
-            {
-                ROS_WARN_THROTTLE(1.0, "[REACH] Failed to poll device. Waiting for data...");
-                notPolling = true;
-            }
-            else if (notPolling)
-            {
-                ROS_INFO_STREAM("[REACH] Polling successful. Reach is now streaming data.");
-                notPolling = false;
-            }
-            ros::Duration(sleep_time).sleep();
-            ros::spinOnce();
-        }
-    }
+  rclcpp::init(argc, argv);
+  rclcpp::spin(std::make_shared<ReachNode>());
+  rclcpp::shutdown();
+  return 0;
 }

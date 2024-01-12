@@ -31,7 +31,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <sstream>
 #include <cmath>
-#include <ros/console.h>
+
+//#include "ros/console.h"
+#include "rclcpp/rclcpp.hpp"
 
 #include "reach_driver/reach_driver.h"
 #include "nmea/nmea_sentence.h"
@@ -40,8 +42,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 using namespace reach_driver;
 using namespace nmea;
 
-ReachDriver::ReachDriver(ros::NodeHandle node,
-                         ros::NodeHandle private_nh)
+//ReachDriver::ReachDriver(ros::NodeHandle node,
+ //                        ros::NodeHandle private_nh)
+
+ class ReachDriverNode : public rclcpp::Node
 {
     bool parser_debug;
     private_nh.param<bool>("parser_debug", parser_debug, false);
@@ -91,7 +95,7 @@ void ReachDriver::setSentencePubs(ros::NodeHandle private_nh, ros::NodeHandle no
         else if (s == "GST")
         {
             publish_gpgst = true;
-            gpgst_pub = node.advertise<nmea_msgs::Gpgst>("reach/nmea/gpgst", 100);
+            //gpgst_pub = node.advertise<nmea_msgs::Gpgst>("reach/nmea/gpgst", 100);
             ss << s << ",";
         }
         else if (s == "GSV")
@@ -109,13 +113,13 @@ void ReachDriver::setSentencePubs(ros::NodeHandle private_nh, ros::NodeHandle no
         else if (s == "VTG")
         {
             publish_gpvtg = true;
-            gpvtg_pub = node.advertise<nmea_msgs::Gpvtg>("reach/nmea/gpvtg", 100);
+            //gpvtg_pub = node.advertise<nmea_msgs::Gpvtg>("reach/nmea/gpvtg", 100);
             ss << s << ",";
         }
         else if (s == "ZDA")
         {
             publish_gpzda = true;
-            gpzda_pub = node.advertise<nmea_msgs::Gpzda>("reach/nmea/gpzda", 100);
+            //gpzda_pub = node.advertise<nmea_msgs::Gpzda>("reach/nmea/gpzda", 100);
             ss << s << ",";
         }
         else

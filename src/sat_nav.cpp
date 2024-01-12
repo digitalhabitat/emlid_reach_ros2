@@ -64,7 +64,7 @@ SatNav::~SatNav()
  *  time_ref    : utc_seconds available from GPGGA, GPRMC, GPGST and GPZDA. GPZDA does not provide ms.
  */
 
-void SatNav::addData(nmea_msgs::Gpgga &gga)
+void SatNav::addData(nmea_msgs::msg::Gpgga &gga)
 {
     if (utcSecondsSetState != SET_STATE_OPTIMUM)
     {
@@ -86,20 +86,20 @@ void SatNav::addData(nmea_msgs::Gpgga &gga)
     hdopSetState = SET_STATE_OPTIMUM;
 }
 
-void SatNav::addData(nmea_msgs::Gpgst &gst)
-{
-    if (utcSecondsSetState != SET_STATE_OPTIMUM)
-    {
-        utcSeconds = gst.utc_seconds;
-        utcSecondsSetState = SET_STATE_OPTIMUM;
-    }
-    latDev = gst.lat_dev;
-    lonDev = gst.lon_dev;
-    altDev = gst.alt_dev;
-    devSetState = SET_STATE_OPTIMUM;
-}
+// void SatNav::addData(nmea_msgs::Gpgst &gst)
+// {
+    // if (utcSecondsSetState != SET_STATE_OPTIMUM)
+    // {
+        // utcSeconds = gst.utc_seconds;
+        // utcSecondsSetState = SET_STATE_OPTIMUM;
+    // }
+    // latDev = gst.lat_dev;
+    // lonDev = gst.lon_dev;
+    // altDev = gst.alt_dev;
+    // devSetState = SET_STATE_OPTIMUM;
+// }
 
-void SatNav::addData(nmea_msgs::Gprmc &rmc)
+void SatNav::addData(nmea_msgs::msg::Gprmc &rmc)
 {
     if (utcSecondsSetState != SET_STATE_OPTIMUM)
     {
@@ -126,7 +126,7 @@ void SatNav::addData(nmea_msgs::Gprmc &rmc)
     date = rmc.date;
 }
 
-void SatNav::addData(nmea_msgs::Gpzda &zda)
+/* void SatNav::addData(nmea_msgs::Gpzda &zda)
 {
     if (utcSecondsSetState == SET_STATE_NONE)
     {
@@ -147,8 +147,9 @@ void SatNav::addData(nmea_msgs::Gpvtg &vtg)
         speedTrackSetState = SET_STATE_OPTIMUM;
     }
 }
+ */
 
-bool SatNav::setTwist(geometry_msgs::Twist &twist)
+bool SatNav::setTwist(geometry_msgs::msg::Twist &twist)
 {
     if (speedTrackSetState == SET_STATE_NONE)
     {
@@ -164,28 +165,28 @@ bool SatNav::setTwist(geometry_msgs::Twist &twist)
     return true;
 }
 
-bool SatNav::setNavSatFix(sensor_msgs::NavSatFix &fix)
+bool SatNav::setNavSatFix(sensor_msgs::msg::NavSatFix &fix)
 {
     if (latLonAltSetState == SET_STATE_NONE)
     {
         return false;
     }
-    sensor_msgs::NavSatStatus status;
+    sensor_msgs::msg::NavSatStatus status;
     switch (gpsQual)
     {
     case 1:
-        status.status = sensor_msgs::NavSatStatus::STATUS_FIX;
+        status.status = sensor_msgs::msg::NavSatStatus::STATUS_FIX;
         break;
     case 9:
     case 2:
-        status.status = sensor_msgs::NavSatStatus::STATUS_SBAS_FIX;
+        status.status = sensor_msgs::msg::NavSatStatus::STATUS_SBAS_FIX;
         break;
     case 4:
     case 5:
-        status.status = sensor_msgs::NavSatStatus::STATUS_GBAS_FIX;
+        status.status = sensor_msgs::msg::NavSatStatus::STATUS_GBAS_FIX;
         break;
     default:
-        status.status = sensor_msgs::NavSatStatus::STATUS_NO_FIX;
+        status.status = sensor_msgs::msg::NavSatStatus::STATUS_NO_FIX;
         break;
     }
     status.service = 1;
@@ -197,29 +198,29 @@ bool SatNav::setNavSatFix(sensor_msgs::NavSatFix &fix)
 
     if (devSetState == SET_STATE_NONE || hdopSetState == SET_STATE_NONE)
     {
-        fix.position_covariance_type = sensor_msgs::NavSatFix::COVARIANCE_TYPE_UNKNOWN;
+        fix.position_covariance_type = sensor_msgs::msg::NavSatFix::COVARIANCE_TYPE_UNKNOWN;
     }
     else
     {
         fix.position_covariance[0] = pow(hdop * latDev, 2);
         fix.position_covariance[4] = pow(hdop * lonDev, 2);
         fix.position_covariance[8] = pow(hdop * altDev, 2);
-        fix.position_covariance_type = sensor_msgs::NavSatFix::COVARIANCE_TYPE_APPROXIMATED;
+        fix.position_covariance_type = sensor_msgs::msg::NavSatFix::COVARIANCE_TYPE_APPROXIMATED;
     }
     return true;
 }
 
-bool SatNav::setTimeReference(sensor_msgs::TimeReference &tref)
+bool SatNav::setTimeReference(sensor_msgs::msg::TimeReference &tref)
 {
     if (year > 0)
     {
         double unixTs = nmea::toUnixTimestamp(year, month, day, utcSeconds);
-        tref.time_ref = ros::Time(unixTs);
+        tref.time_ref = rclcpp::Time(unixTs);
     }
     else if (!date.empty())
     {
         double unixTs = nmea::toUnixTimestamp(date, utcSeconds);
-        tref.time_ref = ros::Time(unixTs);
+        tref.time_ref = rclcpp::Time(unixTs);
     }
     else
     {

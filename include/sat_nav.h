@@ -31,18 +31,30 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
-#include <ros/ros.h>
-#include <string>
-#include <geometry_msgs/Twist.h>
-#include <sensor_msgs/NavSatFix.h>
-#include <sensor_msgs/NavSatStatus.h>
-#include <sensor_msgs/TimeReference.h>
+// #include <ros/ros.h>
+#include "rclcpp/rclcpp.hpp"
 
-#include <nmea_msgs/Gpgga.h>
-#include <nmea_msgs/Gpgst.h>
-#include <nmea_msgs/Gprmc.h>
-#include <nmea_msgs/Gpzda.h>
-#include <nmea_msgs/Gpvtg.h>
+#include <string>
+
+//#include <geometry_msgs/Twist.h>
+#include "geometry_msgs/msg/twist.hpp"
+
+//#include <sensor_msgs/NavSatFix.h>
+//#include <sensor_msgs/NavSatStatus.h>
+//#include <sensor_msgs/TimeReference.h>
+#include "sensor_msgs/msg/nav_sat_fix.hpp"
+#include "sensor_msgs/msg/nav_sat_status.hpp"
+#include "sensor_msgs/msg/time_reference.hpp"
+
+//#include <nmea_msgs/Gpgga.h>
+//#include <nmea_msgs/Gpgst.h>
+//#include <nmea_msgs/Gprmc.h>
+//#include <nmea_msgs/Gpzda.h>
+//#include <nmea_msgs/Gpvtg.h>
+#include "nmea_msgs/msg/gpgsv.hpp"
+#include "nmea_msgs/msg/gpgsa.hpp"
+#include "nmea_msgs/msg/gprmc.hpp"
+#include "nmea_msgs/msg/gpgga.hpp"
 
 #define SET_STATE_NONE 0
 #define SET_STATE_NORMAL 1
@@ -88,14 +100,14 @@ namespace sat_nav
         SatNav();
         ~SatNav();
 
-        void addData(nmea_msgs::Gpgga &gga);
-        void addData(nmea_msgs::Gpgst &gst);
-        void addData(nmea_msgs::Gprmc &rmc);
-        void addData(nmea_msgs::Gpzda &zda);
-        void addData(nmea_msgs::Gpvtg &vtg);
+        void addData(nmea_msgs::msg::Gpgga &gga);
+        //void addData(nmea_msgs::Gpgst &gst);
+        void addData(nmea_msgs::msg::Gprmc &rmc);
+        //void addData(nmea_msgs::Gpzda &zda);
+        //void addData(nmea_msgs::Gpvtg &vtg);
 
-        bool setTwist(geometry_msgs::Twist &twist);
-        bool setNavSatFix(sensor_msgs::NavSatFix &fix);
-        bool setTimeReference(sensor_msgs::TimeReference &tref);
+        bool setTwist(geometry_msgs::msg::Twist &twist);
+        bool setNavSatFix(sensor_msgs::msg::NavSatFix &fix);
+        bool setTimeReference(sensor_msgs::msg::TimeReference &tref);
     };
 }

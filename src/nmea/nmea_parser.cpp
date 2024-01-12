@@ -56,7 +56,7 @@ freely, subject to the following restrictions:
 #include <iostream>
 #include <algorithm>
 #include <cctype>
-#include <ros/console.h>
+//#include <ros/console.h>
 
 #include "nmea/nmea_parser.h"
 #include "nmea/conversion.h"
@@ -185,7 +185,8 @@ void NMEAParser::logWarning(string txt)
 }
 void NMEAParser::logError(string txt)
 {
-	ROS_ERROR_STREAM("[REACH]::NMEA " << txt);
+	//ROS_ERROR_STREAM("[REACH]::NMEA " << txt);
+	RCLCPP_INFO_STREAM(this->get_logger(), "[REACH]::NMEA " << txt);
 }
 
 std::vector<NMEASentence> NMEAParser::getSentencesFromRawText(std::string text)

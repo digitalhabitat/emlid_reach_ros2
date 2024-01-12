@@ -59,15 +59,21 @@ freely, subject to the following restrictions:
 #include <cstdint>
 #include <exception>
 
-#include <nmea_msgs/Sentence.h>
-#include <nmea_msgs/Gpgga.h>
-#include <nmea_msgs/Gpgsa.h>
-#include <nmea_msgs/Gpgst.h>
-#include <nmea_msgs/Gpgsv.h>
-#include <nmea_msgs/GpgsvSatellite.h>
-#include <nmea_msgs/Gprmc.h>
-#include <nmea_msgs/Gpvtg.h>
-#include <nmea_msgs/Gpzda.h>
+//#include <nmea_msgs/Sentence.h>
+//#include <nmea_msgs/Gpgga.h>
+//#include <nmea_msgs/Gpgsa.h>
+//#include <nmea_msgs/Gpgst.h>
+//#include <nmea_msgs/Gpgsv.h>
+//#include <nmea_msgs/GpgsvSatellite.h>
+//#include <nmea_msgs/Gprmc.h>
+//#include <nmea_msgs/Gpvtg.h>
+//#include <nmea_msgs/Gpzda.h>
+#include "nmea_msgs/msg/sentence.h"
+#include "nmea_msgs/msg/gpgsv.h"
+#include "nmea_msgs/msg/gpgsa.h"
+#include "nmea_msgs/msg/gprmc.h"
+#include "nmea_msgs/msg/gpgsv_satellite.h"
+#include "nmea_msgs/msg/gpgga.h"
 
 #include <nmea/nmea_sentence.h>
 
@@ -112,14 +118,14 @@ namespace nmea
 		std::vector<NMEASentence> getSentencesFromRawText(std::string text);
 
 		void parseParameters(NMEASentence &nmea);
-		void parseParameters(nmea_msgs::Sentence &sentence, NMEASentence &nmea);
-		void parseParameters(nmea_msgs::Gprmc &gprmc, NMEASentence &nmea);
-		void parseParameters(nmea_msgs::Gpgga &gpgga, NMEASentence &nmea);
-		void parseParameters(nmea_msgs::Gpgsa &gpgsa, NMEASentence &nmea);
-		void parseParameters(nmea_msgs::Gpgsv &gpgsv, NMEASentence &nmea);
-		void parseParameters(nmea_msgs::Gpgst &gpgst, NMEASentence &nmea);
-		void parseParameters(nmea_msgs::Gpvtg &gpvtg, NMEASentence &nmea);
-		void parseParameters(nmea_msgs::Gpzda &gpzda, NMEASentence &nmea);
+		void parseParameters(nmea_msgs::msg::Sentence &sentence, NMEASentence &nmea);
+		//void parseParameters(nmea_msgs::msg::Gprmc &gprmc, NMEASentence &nmea);
+		void parseParameters(nmea_msgs::msg::Gpgga &gpgga, NMEASentence &nmea);
+		void parseParameters(nmea_msgs::msg::Gpgsa &gpgsa, NMEASentence &nmea);
+		//void parseParameters(nmea_msgs::msg::Gpgsv &gpgsv, NMEASentence &nmea);
+		//void parseParameters(nmea_msgs::Gpgst &gpgst, NMEASentence &nmea);
+		//void parseParameters(nmea_msgs::Gpvtg &gpvtg, NMEASentence &nmea);
+		//void parseParameters(nmea_msgs::Gpzda &gpzda, NMEASentence &nmea);
 	};
 
 }
