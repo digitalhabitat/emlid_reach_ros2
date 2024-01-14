@@ -17,10 +17,10 @@
   <buildtool_depend>ament_cmake</buildtool_depend>
 
   <depend>rclcpp</depend>
-  <depend>serial</depend>
+  <!--<depend>serial</depend> -->
   <depend>geometry_msgs</depend>
-  <depend>sensor_msgs</depend>
-  <depend>nmea_msgs</depend>
+  <depend>sensor_msgs</depend> 
+<!--  <depend>nmea_msgs</depend> -->
 
 <!--   <build_depend>roscpp</build_depend>
   <build_depend>serial</build_depend>

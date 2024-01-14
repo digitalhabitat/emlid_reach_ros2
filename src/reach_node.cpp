@@ -32,82 +32,58 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //#include <ros/ros.h>
 #include "rclcpp/rclcpp.hpp"
 
-//#include <nmea_msgs/Sentence.h>
-//#include <nmea_msgs/Gpgga.h>
-//#include <nmea_msgs/Gpgsa.h>
-//#include <nmea_msgs/Gpgst.h>
-//#include <nmea_msgs/Gpgsv.h>
-//#include <nmea_msgs/GpgsvSatellite.h>
-//#include <nmea_msgs/Gprmc.h>
-#include "nmea_msgs/msg/sentence.h"
-#include "nmea_msgs/msg/gpgsv.h"
-#include "nmea_msgs/msg/gpgsa.h"
-#include "nmea_msgs/msg/gprmc.h"
-#include "nmea_msgs/msg/gpgsv_satellite.h"
-#include "nmea_msgs/msg/gpgga.h"
+// Need nmea_msgs version 2.1.0
+#include "nmea_msgs/msg/gpgsa.hpp"
+#include "nmea_msgs/msg/gpvtg.hpp"
+#include "nmea_msgs/msg/gpgga.hpp"
+#include "nmea_msgs/msg/gprmc.hpp"
+#include "nmea_msgs/msg/sentence.hpp"
+#include "nmea_msgs/msg/gpzda.hpp"
+#include "nmea_msgs/msg/gpgst.hpp"
+#include "nmea_msgs/msg/gpgsv_satellite.hpp"
+#include "nmea_msgs/msg/gpgsv.hpp"
 
 #include "nmea/nmea_parser.h"
 #include "nmea/nmea_sentence.h"
 #include "reach_driver/reach_driver.h"
 
-class ReachNode : public rclcpp::Node
-{
-public:
-  ReachNode() : Node("reach_node")
-  {
-    declare_parameters();
-    get_parameters();
-
-    double sleep_time = 1.0 / polling_rate_;
-    bool notPolling = true;
-
-    if (commType_ == "serial")
-    {
-      serial_driver_ = std::make_shared<reach_driver::ReachSerialDriver>(shared_from_this());
-      while (rclcpp::ok() && serial_driver_->ok())
-      {
-        bool polled = serial_driver_->poll();
-        if (!polled)
-        {
-          auto& clk = *this->get_clock();
-          RCLCPP_WARN_THROTTLE(this->get_logger(), clk, 1000, "[REACH] Failed to poll device. Waiting for data...");
-          notPolling = true;
-        }
-        else if (notPolling)
-        {
-          RCLCPP_INFO(this->get_logger(), "[REACH] Polling successful. Reach is now streaming data.");
-          notPolling = false;
-        }
-        std::this_thread::sleep_for(std::chrono::duration<double>(sleep_time));
-        rclcpp::spin_some(shared_from_this());
-      }
-    }
-  }
-
-private:
-  void declare_parameters()
-  {
-    declare_parameter<std::string>("comm_type", "serial");
-    declare_parameter<double>("polling_rate", 1.0);
-  }
-
-  void get_parameters()
-  {
-    commType_ = get_parameter("comm_type").as_string();
-    polling_rate_ = get_parameter("polling_rate").as_double();
-    RCLCPP_INFO_STREAM(this->get_logger(), "[REACH] Communication type: " << commType_);
-    RCLCPP_INFO_STREAM(this->get_logger(), "[REACH] Polling rate: " << polling_rate_);
-  }
-
-  std::string commType_;
-  double polling_rate_;
-  std::shared_ptr<reach_driver::ReachSerialDriver> serial_driver_;
-};
 
 int main(int argc, char *argv[])
 {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<ReachNode>());
+  std::string commType;
+  double polling_rate;
+
+  auto node  = std::make_shared<reach_driver::ReachSerialDriver>();
+
+  node->declare_parameter<std::string>("comm_type", "serial");
+  node->declare_parameter<double>("polling_rate", 1.0);
+  commType = node->get_parameter("comm_type").as_string();
+  polling_rate = node->get_parameter("polling_rate").as_double();
+  RCLCPP_INFO_STREAM(node->get_logger(), "[REACH] Communication type: " << commType);
+  RCLCPP_INFO_STREAM(node->get_logger(), "[REACH] Polling rate: " << polling_rate);
+
+  double sleep_time = 1.0 / polling_rate;
+  bool notPolling = true;
+
+  while (rclcpp::ok() && node->serial_ok())
+  {
+    bool polled = node->driver_poll();
+    if (!polled)
+    {
+        auto& clk = *node->get_clock();
+        RCLCPP_WARN_THROTTLE(node->get_logger(), clk, 1000, "[REACH] Failed to poll device. Waiting for data...");
+        notPolling = true;
+    }
+    else if (notPolling)
+    {
+        RCLCPP_INFO(node->get_logger(), "[REACH] Polling successful. Reach is now streaming data.");
+        notPolling = false;
+    }
+    std::this_thread::sleep_for(std::chrono::duration<double>(sleep_time));
+    rclcpp::spin_some(node);
+  }
+
   rclcpp::shutdown();
   return 0;
 }

@@ -86,18 +86,18 @@ void SatNav::addData(nmea_msgs::msg::Gpgga &gga)
     hdopSetState = SET_STATE_OPTIMUM;
 }
 
-// void SatNav::addData(nmea_msgs::Gpgst &gst)
-// {
-    // if (utcSecondsSetState != SET_STATE_OPTIMUM)
-    // {
-        // utcSeconds = gst.utc_seconds;
-        // utcSecondsSetState = SET_STATE_OPTIMUM;
-    // }
-    // latDev = gst.lat_dev;
-    // lonDev = gst.lon_dev;
-    // altDev = gst.alt_dev;
-    // devSetState = SET_STATE_OPTIMUM;
-// }
+void SatNav::addData(nmea_msgs::msg::Gpgst &gst)
+{
+    if (utcSecondsSetState != SET_STATE_OPTIMUM)
+    {
+        utcSeconds = gst.utc_seconds;
+        utcSecondsSetState = SET_STATE_OPTIMUM;
+    }
+    latDev = gst.lat_dev;
+    lonDev = gst.lon_dev;
+    altDev = gst.alt_dev;
+    devSetState = SET_STATE_OPTIMUM;
+}
 
 void SatNav::addData(nmea_msgs::msg::Gprmc &rmc)
 {
@@ -126,7 +126,7 @@ void SatNav::addData(nmea_msgs::msg::Gprmc &rmc)
     date = rmc.date;
 }
 
-/* void SatNav::addData(nmea_msgs::Gpzda &zda)
+void SatNav::addData(nmea_msgs::msg::Gpzda &zda)
 {
     if (utcSecondsSetState == SET_STATE_NONE)
     {
@@ -138,7 +138,7 @@ void SatNav::addData(nmea_msgs::msg::Gprmc &rmc)
     year = zda.year;
 }
 
-void SatNav::addData(nmea_msgs::Gpvtg &vtg)
+void SatNav::addData(nmea_msgs::msg::Gpvtg &vtg)
 {
     if (speedTrackSetState != SET_STATE_OPTIMUM)
     {
@@ -147,7 +147,7 @@ void SatNav::addData(nmea_msgs::Gpvtg &vtg)
         speedTrackSetState = SET_STATE_OPTIMUM;
     }
 }
- */
+
 
 bool SatNav::setTwist(geometry_msgs::msg::Twist &twist)
 {

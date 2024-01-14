@@ -12,10 +12,10 @@ endif()
 # Find ROS 2 packages
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(serial CONFIG REQUIRED)
+find_package(serial CONFIG REQUIRED) # local build
 find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
-find_package(nmea_msgs REQUIRED)
+find_package(nmea_msgs CONFIG REQUIRED) # local build; needed version 2.1.0 
 
 ### nmea_lib ###
 

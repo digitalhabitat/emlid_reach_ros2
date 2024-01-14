@@ -61,21 +61,15 @@ freely, subject to the following restrictions:
 
 #include "rclcpp/rclcpp.hpp"
 
-//#include <nmea_msgs/Sentence.h>
-//#include <nmea_msgs/Gpgga.h>
-//#include <nmea_msgs/Gpgsa.h>
-//#include <nmea_msgs/Gpgst.h>
-//#include <nmea_msgs/Gpgsv.h>
-//#include <nmea_msgs/GpgsvSatellite.h>
-//#include <nmea_msgs/Gprmc.h>
-//#include <nmea_msgs/Gpvtg.h>
-//#include <nmea_msgs/Gpzda.h>
-#include "nmea_msgs/msg/sentence.hpp"
-#include "nmea_msgs/msg/gpgsv.hpp"
 #include "nmea_msgs/msg/gpgsa.hpp"
-#include "nmea_msgs/msg/gprmc.hpp"
-#include "nmea_msgs/msg/gpgsv_satellite.hpp"
+#include "nmea_msgs/msg/gpvtg.hpp"
 #include "nmea_msgs/msg/gpgga.hpp"
+#include "nmea_msgs/msg/gprmc.hpp"
+#include "nmea_msgs/msg/sentence.hpp"
+#include "nmea_msgs/msg/gpzda.hpp"
+#include "nmea_msgs/msg/gpgst.hpp"
+#include "nmea_msgs/msg/gpgsv_satellite.hpp"
+#include "nmea_msgs/msg/gpgsv.hpp"
 
 #include <nmea/nmea_sentence.h>
 
@@ -126,10 +120,10 @@ namespace nmea
 		void parseParameters(nmea_msgs::msg::Gprmc &gprmc, NMEASentence &nmea);
 		void parseParameters(nmea_msgs::msg::Gpgga &gpgga, NMEASentence &nmea);
 		void parseParameters(nmea_msgs::msg::Gpgsa &gpgsa, NMEASentence &nmea);
-		//void parseParameters(nmea_msgs::msg::Gpgsv &gpgsv, NMEASentence &nmea);
-		//void parseParameters(nmea_msgs::Gpgst &gpgst, NMEASentence &nmea);
-		//void parseParameters(nmea_msgs::Gpvtg &gpvtg, NMEASentence &nmea);
-		//void parseParameters(nmea_msgs::Gpzda &gpzda, NMEASentence &nmea);
+		void parseParameters(nmea_msgs::msg::Gpgsv &gpgsv, NMEASentence &nmea);
+		void parseParameters(nmea_msgs::msg::Gpgst &gpgst, NMEASentence &nmea);
+		void parseParameters(nmea_msgs::msg::Gpvtg &gpvtg, NMEASentence &nmea);
+		void parseParameters(nmea_msgs::msg::Gpzda &gpzda, NMEASentence &nmea);
 	};
 
 }

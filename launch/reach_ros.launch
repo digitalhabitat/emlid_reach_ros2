@@ -6,7 +6,7 @@
 	<arg name="polling_rate" default="1.0" />
 	<arg name="sentences" default="GGA,GST,ZDA,VTG" />
 	<arg name="pub_ignored" default="true" />
-	<arg name="parser_debug" default="false" />
+	<arg name="parser_debug" default="true" />
 	<arg name="frame_id" default="gps" />
 
 	<node pkg="emlid_reach_ros" type="reach_node" name="reach_node" output="screen">

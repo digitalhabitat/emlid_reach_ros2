@@ -46,15 +46,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "sensor_msgs/msg/nav_sat_status.hpp"
 #include "sensor_msgs/msg/time_reference.hpp"
 
-//#include <nmea_msgs/Gpgga.h>
-//#include <nmea_msgs/Gpgst.h>
-//#include <nmea_msgs/Gprmc.h>
-//#include <nmea_msgs/Gpzda.h>
-//#include <nmea_msgs/Gpvtg.h>
-#include "nmea_msgs/msg/gpgsv.hpp"
+// Need nmea_msgs version 2.1.0
 #include "nmea_msgs/msg/gpgsa.hpp"
-#include "nmea_msgs/msg/gprmc.hpp"
+#include "nmea_msgs/msg/gpvtg.hpp"
 #include "nmea_msgs/msg/gpgga.hpp"
+#include "nmea_msgs/msg/gprmc.hpp"
+#include "nmea_msgs/msg/gpzda.hpp"
+#include "nmea_msgs/msg/gpgst.hpp"
+#include "nmea_msgs/msg/gpgsv.hpp"
 
 #define SET_STATE_NONE 0
 #define SET_STATE_NORMAL 1
@@ -101,10 +100,10 @@ namespace sat_nav
         ~SatNav();
 
         void addData(nmea_msgs::msg::Gpgga &gga);
-        //void addData(nmea_msgs::Gpgst &gst);
+        void addData(nmea_msgs::msg::Gpgst &gst);
         void addData(nmea_msgs::msg::Gprmc &rmc);
-        //void addData(nmea_msgs::Gpzda &zda);
-        //void addData(nmea_msgs::Gpvtg &vtg);
+        void addData(nmea_msgs::msg::Gpzda &zda);
+        void addData(nmea_msgs::msg::Gpvtg &vtg);
 
         bool setTwist(geometry_msgs::msg::Twist &twist);
         bool setNavSatFix(sensor_msgs::msg::NavSatFix &fix);

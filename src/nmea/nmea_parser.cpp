@@ -538,8 +538,8 @@ void NMEAParser::parseParameters(nmea_msgs::msg::Gpgsa &gpgsa, NMEASentence &nme
 	}
 	logInfo("ROS GSA parsed.");
 }
-/* 
-void NMEAParser::parseParameters(nmea_msgs::Gpgsv &gpgsv, NMEASentence &nmea)
+
+void NMEAParser::parseParameters(nmea_msgs::msg::Gpgsv &gpgsv, NMEASentence &nmea)
 {
 	// uint8 n_msgs
 	// uint8 msg_number
@@ -560,7 +560,7 @@ void NMEAParser::parseParameters(nmea_msgs::Gpgsv &gpgsv, NMEASentence &nmea)
 		gpgsv.n_satellites = (uint8_t)parseInt(nmea.parameters[2]);
 		for (size_t i = 3; i < nmea.parameters.size(); i += 4)
 		{
-			nmea_msgs::GpgsvSatellite sat;
+			nmea_msgs::msg::GpgsvSatellite sat;
 			// uint8 prn
 			// uint8 elevation
 			// uint16 azimuth
@@ -584,7 +584,7 @@ void NMEAParser::parseParameters(nmea_msgs::Gpgsv &gpgsv, NMEASentence &nmea)
 	logInfo("ROS GSV parsed.");
 }
 
-void NMEAParser::parseParameters(nmea_msgs::Gpgst &gpgst, NMEASentence &nmea)
+void NMEAParser::parseParameters(nmea_msgs::msg::Gpgst &gpgst, NMEASentence &nmea)
 {
 	// float64 utc_seconds
 	// float32 rms
@@ -625,7 +625,7 @@ void NMEAParser::parseParameters(nmea_msgs::Gpgst &gpgst, NMEASentence &nmea)
 	logInfo("ROS GST parsed.");
 }
 
-void NMEAParser::parseParameters(nmea_msgs::Gpvtg &gpvtg, NMEASentence &nmea)
+void NMEAParser::parseParameters(nmea_msgs::msg::Gpvtg &gpvtg, NMEASentence &nmea)
 {
 	// float64 tmg_a
 	// float64 track_t
@@ -669,7 +669,7 @@ void NMEAParser::parseParameters(nmea_msgs::Gpvtg &gpvtg, NMEASentence &nmea)
 	logInfo("ROS VTG parsed.");
 }
 
-void NMEAParser::parseParameters(nmea_msgs::Gpzda &gpzda, NMEASentence &nmea)
+void NMEAParser::parseParameters(nmea_msgs::msg::Gpzda &gpzda, NMEASentence &nmea)
 {
 	// uint32 utc_seconds
 	// uint8 day
@@ -705,4 +705,3 @@ void NMEAParser::parseParameters(nmea_msgs::Gpzda &gpzda, NMEASentence &nmea)
 	}
 	logInfo("ROS ZDA parsed.");
 }
- */

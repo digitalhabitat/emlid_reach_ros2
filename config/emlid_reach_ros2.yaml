@@ -1,0 +1,11 @@
+emlid_reach_ros2:
+  ros__parameters:
+    comm_type: "serial"
+    polling_rate: 1.0
+    parser_debug: true
+    frame_id: gps
+    pub_ignored: false
+    sentences: "GGA,GSA,GST" #,GSV,RMC,VTG,ZDA"
+    port: "/dev/emlid_rtk"
+    baudrate: 115200
+    timeout: 5

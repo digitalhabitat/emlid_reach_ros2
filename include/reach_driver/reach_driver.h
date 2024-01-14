@@ -48,58 +48,61 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "sensor_msgs/msg/nav_sat_status.hpp"
 #include "sensor_msgs/msg/time_reference.hpp"
 
-//#include <nmea_msgs/Sentence.h>
-//#include <nmea_msgs/Gpgga.h>
-//#include <nmea_msgs/Gpgsa.h>
-//#include <nmea_msgs/Gpgst.h>
-//#include <nmea_msgs/Gpgsv.h>
-//#include <nmea_msgs/GpgsvSatellite.h>
-//#include <nmea_msgs/Gprmc.h>
-//#include <nmea_msgs/Gpzda.h>
-//#include <nmea_msgs/Gpvtg.h>
-#include "nmea_msgs/msg/sentence.hpp"
-#include "nmea_msgs/msg/gpgsv.hpp"
+// Need nmea_msgs version 2.1.0
 #include "nmea_msgs/msg/gpgsa.hpp"
-#include "nmea_msgs/msg/gprmc.hpp"
-#include "nmea_msgs/msg/gpgsv_satellite.hpp"
+#include "nmea_msgs/msg/gpvtg.hpp"
 #include "nmea_msgs/msg/gpgga.hpp"
+#include "nmea_msgs/msg/gprmc.hpp"
+#include "nmea_msgs/msg/sentence.hpp"
+#include "nmea_msgs/msg/gpzda.hpp"
+#include "nmea_msgs/msg/gpgst.hpp"
+#include "nmea_msgs/msg/gpgsv_satellite.hpp"
+#include "nmea_msgs/msg/gpgsv.hpp"
 
 #include "nmea/nmea_parser.h"
 #include "sat_nav.h"
 
 using namespace std;
 
+class ReachNode : public rclcpp::Node
+{
+public:
+  ReachNode() : Node("reach_node") {}
+
+   virtual bool serial_ok(){return false;}
+   virtual bool driver_poll(){return false;};
+};
+
 namespace reach_driver
 {
-    class ReachDriver
+    class ReachDriver : public ReachNode
     {
     public:
         //ReachDriver(ros::NodeHandle node, ros::NodeHandle private_nh);
-        ReachDriver(std::shared_ptr<rclcpp::Node> my_node);
+        ReachDriver();
         ~ReachDriver();
 
         virtual bool available();
-        bool poll();
 
-        rclcpp::Logger logger_;
+        //virtual bool driver_poll(){return false;};
+        bool driver_poll(void) override;
 
     private:
         //void setSentencePubs(ros::NodeHandle private_nh, ros::NodeHandle node);
-        void setSentencePubs(std::shared_ptr<rclcpp::Node> my_node);
+        void setSentencePubs();
         virtual string readFromDevice();
 
-        std::shared_ptr<rclcpp::Node> my_node_;
         nmea::NMEAParser parser;
         std::string frame_id;
 
         rclcpp::Publisher<nmea_msgs::msg::Sentence>::SharedPtr sentence_pub;
         rclcpp::Publisher<nmea_msgs::msg::Gpgga>::SharedPtr gpgga_pub;
         rclcpp::Publisher<nmea_msgs::msg::Gpgsa>::SharedPtr gpgsa_pub;
-        //rclcpp::Publisher<nmea_msgs::msg::Gpgst>::SharedPtr gpgst_pub;
-        //rclcpp::Publisher<nmea_msgs::msg::Gpgsv>::SharedPtr gpgsv_pub;
-        //rclcpp::Publisher<nmea_msgs::msg::Gprmc>::SharedPtr gprmc_pub;
-        //rclcpp::Publisher<nmea_msgs::msg::Gpvtg>::SharedPtr gpvtg_pub;
-        //rclcpp::Publisher<nmea_msgs::msg::Gpzda>::SharedPtr gpzda_pub;
+        rclcpp::Publisher<nmea_msgs::msg::Gpgst>::SharedPtr gpgst_pub;
+        rclcpp::Publisher<nmea_msgs::msg::Gpgsv>::SharedPtr gpgsv_pub;
+        rclcpp::Publisher<nmea_msgs::msg::Gprmc>::SharedPtr gprmc_pub;
+        rclcpp::Publisher<nmea_msgs::msg::Gpvtg>::SharedPtr gpvtg_pub;
+        rclcpp::Publisher<nmea_msgs::msg::Gpzda>::SharedPtr gpzda_pub;
         rclcpp::Publisher<sensor_msgs::msg::NavSatFix>::SharedPtr fix_pub;
         rclcpp::Publisher<sensor_msgs::msg::TimeReference>::SharedPtr timeref_pub;
         rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr twist_pub;
@@ -107,11 +110,11 @@ namespace reach_driver
         bool publish_ignored = false;
         bool publish_gpgga = false;
         bool publish_gpgsa = false;
-        //bool publish_gpgst = false;
-        //bool publish_gpgsv = false;
-        //bool publish_gprmc = false;
-        //bool publish_gpvtg = false;
-        //bool publish_gpzda = false;
+        bool publish_gpgst = false;
+        bool publish_gpgsv = false;
+        bool publish_gprmc = false;
+        bool publish_gpvtg = false;
+        bool publish_gpzda = false;
     };
 
     class ReachSerialDriver : public ReachDriver
@@ -119,7 +122,7 @@ namespace reach_driver
 
     public:
         //ReachSerialDriver(ros::NodeHandle node, ros::NodeHandle private_nh);
-        ReachSerialDriver(std::shared_ptr<rclcpp::Node> my_node);
+        ReachSerialDriver();
         ~ReachSerialDriver();
 
         void initialise();
@@ -128,9 +131,9 @@ namespace reach_driver
 
         void reconnect();
 
-        bool ok();
+        bool serial_ok(void) override;
 
-        bool available();
+        bool available() override;
 
     private:
         string readFromDevice();
